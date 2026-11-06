@@ -33,8 +33,10 @@ The full overview, in continuous prose: [docs/VISAO.md](docs/VISAO.md) (in Portu
 | 5 | Update the mirror every day | `git -C <espelho> remote update --prune` | ⚙️ timer |
 | 6 | Daily snapshot | `mkdir -p <data>` + `git -C <espelho> bundle create <data>/<repo>.bundle --all` | ⚙️ timer |
 | 7 | Push to GitLab (creates the private project on the first push) | `git -C <espelho> push <url-gitlab> --all` + `--tags` | ⚙️ timer |
-| 8 | Weekly off-site copy: the VPS pulls the snapshots (or Forgejo) | on the VPS: `rsync -a usuario@sua-maquina:/backup/fotos/ /backup/fotos/` | ⚙️ timer |
-| 9 | Test restoring 3 repos | `git clone --mirror <bundle>` + `git push <url> --all` + `--tags` | 🧠 you |
+| 8 | Before the full copy: test restoring 3 repos and check the largest ones (GitLab Free: 10 GiB per project, 5 GiB per push) | `gh repo list <conta> --json name,diskUsage` + the commands from step 11 | 🧠 you |
+| 9 | First full copy by hand, then the routine on a daily schedule | `/backup/rotina-diaria.sh` + cron `0 3 * * *` | ⚙️ timer |
+| 10 | Weekly off-site copy: the VPS pulls the snapshots (or Forgejo) | on the VPS: `rsync -a usuario@sua-maquina:/backup/fotos/ /backup/fotos/` | ⚙️ timer |
+| 11 | Every month: test restoring 3 randomly picked repos | `ls /backup/espelho \| shuf -n 3` + `git clone --mirror <bundle>` + `git push <url> --all` + `--tags` | 🧠 you |
 
 ## License
 

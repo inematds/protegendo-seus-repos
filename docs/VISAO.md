@@ -126,6 +126,12 @@ git push https://gitlab.com/conta-nova/projeto.git --tags   # (--mirror levaria 
 
 **Teste a volta antes de precisar dela:** escolha 3 repos, restaure num lugar novo e compare
 (`git log --oneline --all | wc -l` e `git for-each-ref | wc -l`, comparando com o espelho).
+Faça esse teste **antes** da primeira cópia completa e depois **todo mês**, com 3 repos sorteados
+(`ls /backup/espelho | shuf -n 3`): um teste só, no começo, não avisa se a rotina quebrou depois.
+
+**Confira os maiores repos antes do primeiro envio:** o GitLab grátis aceita até 10 GiB por projeto e
+5 GiB por envio. `gh repo list <conta> --limit 2000 --json name,diskUsage` mostra o tamanho de cada um
+(em KB, estimativa do GitHub). Repo acima disso fica só nas fotos e na cópia fora de casa.
 
 ## 5. Prevenção (barato e evita a maior parte dos problemas)
 

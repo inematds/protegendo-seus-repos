@@ -322,7 +322,9 @@ LISTA=$(gh repo list "$CONTA" --limit 2000 --json name -q '.[].name') &amp;&amp;
 <span class="c"># rotação: apaga fotos com mais de 35 dias, menos as do dia 01 (ficam como mensais; apague à mão as muito antigas)</span>
 find "$BASE/fotos" -mindepth 1 -maxdepth 1 -type d -mtime +35 ! -name '*-01' -exec rm -rf {} +
 echo "$DIA: $FALHAS falha(s)" &gt;&gt; "$BASE/rotina.log"</pre>
-    <p>Rode uma vez à mão (<code>/backup/rotina-diaria.sh</code>) antes de pôr no relógio: com centenas de repos, a primeira vez pode levar horas. Depois, no cron (<code>crontab -e</code>), com o PATH na primeira linha, porque o cron não carrega o do terminal:</p>
+    <p><b>Antes da primeira cópia completa, duas conferências.</b> Primeiro, teste com 3 repos: faça os passos 4 a 6 à mão em 3 deles e a volta do passo 8; só siga se os números baterem. Depois, veja os maiores repos: o GitLab grátis aceita até 10 GiB por projeto e 5 GiB por envio. O comando abaixo lista os 5 maiores, em KB (estimativa do próprio GitHub). Um repo acima do limite fica só nas fotos e na cópia fora de casa, e a rotina vai registrar "GitLab recusou" para ele todo dia.</p>
+<pre><span class="k">gh repo list</span> <span class="s">sua-conta-github</span> --limit 2000 --json name,diskUsage -q '.[] | "\(.diskUsage) \(.name)"' | <span class="k">sort -n | tail -5</span></pre>
+    <p>Aí sim, rode a rotina uma vez à mão (<code>/backup/rotina-diaria.sh</code>) antes de pôr no relógio: com centenas de repos, a primeira vez pode levar horas. Depois, no cron (<code>crontab -e</code>), com o PATH na primeira linha, porque o cron não carrega o do terminal:</p>
 <pre>PATH=/usr/local/bin:/usr/bin:/bin
 <span class="k">0 3 * * *</span> /backup/rotina-diaria.sh &gt;&gt; /backup/cron.log 2&gt;&amp;1</pre>
     <p>Para ver se rodou: <code>tail /backup/cron.log</code> e <code>tail /backup/rotina.log</code>.</p>
@@ -344,6 +346,8 @@ echo "$DIA: $FALHAS falha(s)" &gt;&gt; "$BASE/rotina.log"</pre>
 <span class="k">git push</span> <span class="s">https://gitlab.com/conta-nova/projeto.git</span> <span class="k">--all</span>    <span class="c"># sobe as branches para qualquer serviço</span>
 <span class="k">git push</span> <span class="s">https://gitlab.com/conta-nova/projeto.git</span> <span class="k">--tags</span>   <span class="c"># e as tags</span></pre>
     <p>Compare com o espelho, não com o repo no GitHub: o espelho e a foto carregam também os <code>refs/pull/*</code>, que o repo normal não mostra. Pelo mesmo motivo, a volta usa <code>--all</code> + <code>--tags</code> e não <code>--mirror</code>.</p>
+    <p><b>Todo mês, repita.</b> Sorteie 3 repos e restaure da foto mais recente. Um teste só, no começo, não avisa se a rotina quebrou depois.</p>
+<pre><span class="k">ls</span> /backup/espelho | <span class="k">shuf -n 3</span>     <span class="c"># sorteia 3 repos para o teste do mês</span></pre>
   </div></div>
 
   <div class="alert"><b>E as issues, PRs e releases?</b> O git não leva. Para guardar também: o GitHub exporta tudo da sua conta em <i>Settings → Account → Export account data</i>; o <code>gh</code> salva por repo (<code>gh issue list --state all --json number,title,body,comments &gt; issues.json</code>); e o importador do GitLab (<i>New project → Import project → GitHub</i>) traz issues e PRs de um repo de uma vez. Atenção: o importador pede um token do GitHub dentro da conta do GitLab, o que liga as duas contas; se for usar, faça numa terceira conta, não na de backup.</div>

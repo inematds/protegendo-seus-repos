@@ -33,8 +33,10 @@ La visión completa, en texto corrido: [docs/VISAO.md](docs/VISAO.md) (en portug
 | 5 | Actualizar el espejo todos los días | `git -C <espelho> remote update --prune` | ⚙️ timer |
 | 6 | Foto del día | `mkdir -p <data>` + `git -C <espelho> bundle create <data>/<repo>.bundle --all` | ⚙️ timer |
 | 7 | Enviar a GitLab (crea el proyecto privado en el primer envío) | `git -C <espelho> push <url-gitlab> --all` + `--tags` | ⚙️ timer |
-| 8 | Copia semanal fuera de casa: la VPS descarga las fotos (o Forgejo) | en la VPS: `rsync -a usuario@sua-maquina:/backup/fotos/ /backup/fotos/` | ⚙️ timer |
-| 9 | Probar la restauración con 3 repos | `git clone --mirror <bundle>` + `git push <url> --all` + `--tags` | 🧠 tú |
+| 8 | Antes de la copia completa: probar la restauración de 3 repos y revisar los más grandes (GitLab gratis: 10 GiB por proyecto, 5 GiB por envío) | `gh repo list <conta> --json name,diskUsage` + los comandos del paso 11 | 🧠 tú |
+| 9 | Primera copia completa a mano; después, la rutina programada cada día | `/backup/rotina-diaria.sh` + cron `0 3 * * *` | ⚙️ timer |
+| 10 | Copia semanal fuera de casa: la VPS descarga las fotos (o Forgejo) | en la VPS: `rsync -a usuario@sua-maquina:/backup/fotos/ /backup/fotos/` | ⚙️ timer |
+| 11 | Cada mes: probar la restauración con 3 repos elegidos al azar | `ls /backup/espelho \| shuf -n 3` + `git clone --mirror <bundle>` + `git push <url> --all` + `--tags` | 🧠 tú |
 
 ## Licencia
 

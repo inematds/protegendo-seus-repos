@@ -323,7 +323,9 @@ LISTA=$(gh repo list "$CONTA" --limit 2000 --json name -q '.[].name') &amp;&amp;
 <span class="c"># rotação: apaga fotos com mais de 35 dias, menos as do dia 01 (ficam como mensais; apague à mão as muito antigas)</span>
 find "$BASE/fotos" -mindepth 1 -maxdepth 1 -type d -mtime +35 ! -name '*-01' -exec rm -rf {} +
 echo "$DIA: $FALHAS falha(s)" &gt;&gt; "$BASE/rotina.log"</pre>
-    <p>Run it once by hand (<code>/backup/rotina-diaria.sh</code>) before putting it on a schedule: with hundreds of repos, the first run can take hours. Then add it to cron (<code>crontab -e</code>), with PATH on the first line, because cron doesn't load the one from your terminal:</p>
+    <p><b>Before the first full copy, do two checks.</b> First, test with 3 repos: do steps 4 to 6 by hand on 3 of them and the restore in step 8; continue only if the numbers match. Then check the largest repos: GitLab Free accepts up to 10 GiB per project and 5 GiB per push. The command below lists the 5 largest, in KB (GitHub’s own estimate). A repo over the limit is kept only in the snapshots and the off-site copy, and the routine will log "GitLab recusou" (GitLab refused) for it every day.</p>
+<pre><span class="k">gh repo list</span> <span class="s">sua-conta-github</span> --limit 2000 --json name,diskUsage -q '.[] | "\(.diskUsage) \(.name)"' | <span class="k">sort -n | tail -5</span></pre>
+    <p>Then run it once by hand (<code>/backup/rotina-diaria.sh</code>) before putting it on a schedule: with hundreds of repos, the first run can take hours. Then add it to cron (<code>crontab -e</code>), with PATH on the first line, because cron doesn't load the one from your terminal:</p>
 <pre>PATH=/usr/local/bin:/usr/bin:/bin
 <span class="k">0 3 * * *</span> /backup/rotina-diaria.sh &gt;&gt; /backup/cron.log 2&gt;&amp;1</pre>
     <p>To check whether it ran: <code>tail /backup/cron.log</code> and <code>tail /backup/rotina.log</code>.</p>
@@ -345,6 +347,8 @@ echo "$DIA: $FALHAS falha(s)" &gt;&gt; "$BASE/rotina.log"</pre>
 <span class="k">git push</span> <span class="s">https://gitlab.com/conta-nova/projeto.git</span> <span class="k">--all</span>    <span class="c"># sobe as branches para qualquer serviço</span>
 <span class="k">git push</span> <span class="s">https://gitlab.com/conta-nova/projeto.git</span> <span class="k">--tags</span>   <span class="c"># e as tags</span></pre>
     <p>Compare with the mirror, not the repo on GitHub: the mirror and snapshot also contain <code>refs/pull/*</code>, which the regular repo doesn't show. For the same reason, restoring uses <code>--all</code> + <code>--tags</code>, not <code>--mirror</code>.</p>
+    <p><b>Repeat every month.</b> Pick 3 repos at random and restore them from the latest snapshot. A single test at the start won’t tell you if the routine breaks later.</p>
+<pre><span class="k">ls</span> /backup/espelho | <span class="k">shuf -n 3</span>     <span class="c"># picks 3 repos for this month’s test</span></pre>
   </div></div>
 
   <div class="alert"><b>What about issues, PRs, and releases?</b> git doesn't include them. To save those too: GitHub lets you export all your account data under <i>Settings → Account → Export account data</i>; <code>gh</code> can save them per repo (<code>gh issue list --state all --json number,title,body,comments &gt; issues.json</code>); and the GitLab importer (<i>New project → Import project → GitHub</i>) brings over a repo's issues and PRs in one go. Note: the importer asks for a GitHub token inside your GitLab account, linking the two accounts; if you use it, do so in a third account, not the backup account.</div>
