@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protege tus repos — copias de seguridad en capas contra bloqueos e invasiones</title>
+<meta name="description" content="Cómo guardar una copia segura de todos tus repositorios git para el día en que bloqueen o vulneren tu cuenta: por qué otra cuenta en GitHub no basta, GitLab sin vínculos, copias fechadas, Forgejo, límites de los planes y qué cambia al migrar.">
+<link rel="alternate" hreflang="pt-BR" href="https://inematds.github.io/protegendo-seus-repos/guia/">
+<link rel="alternate" hreflang="en" href="https://inematds.github.io/protegendo-seus-repos/guia/en/">
+<link rel="alternate" hreflang="es" href="https://inematds.github.io/protegendo-seus-repos/guia/es/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0c10; --bg2:#14141b; --card:#16161e; --line:#272730;
+    --txt:#e9e9ee; --mut:#9a9aa6; --amb:#E2A23B; --amb2:#f0c070; --sky:#38bdf8; --pro:#cbd5e1;
+    color-scheme:dark;
+  }
+  body.light{
+    --bg:#f6f7f9; --bg2:#eceef2; --card:#ffffff; --line:#e1e3ea;
+    --txt:#1a1a22; --mut:#5b5b68; --amb:#b9791d; --amb2:#a16207; --sky:#0369a1; --pro:#b45309;
+    color-scheme:light;
+  }
+  body.light .hero .glow{opacity:.5}
+  body.light pre{background:#0e0e14;color:#d6d6e0}
+  body.light pre .c{color:#8a8a98}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.65 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:Sora,sans-serif;line-height:1.15;margin:0}
+  a{color:var(--amb);text-decoration:none}
+  code,pre{font-family:"JetBrains Mono",monospace}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 22px}
+  .mut{color:var(--mut)} .amb{color:var(--amb)}
+  .chip{display:inline-block;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amb);font-weight:600;font-family:Sora}
+  nav{position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:rgba(12,12,16,.78);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:22px;height:60px}
+  nav .brand{display:flex;align-items:center;gap:8px;font-family:Sora;font-weight:800;letter-spacing:-.02em;color:var(--amb)}
+  nav .brand .emoji{font-size:1.25rem}
+  nav .sep{color:var(--mut);opacity:.45}
+  nav .inema{color:var(--sky);font-weight:600;font-size:.88rem;font-family:Sora}
+  nav .inema:hover{filter:brightness(1.15)}
+  nav .pro{color:var(--pro);font-weight:600;font-size:.88rem;font-family:Sora}
+  nav .pro:hover{filter:brightness(1.15)}
+  nav .clubpro{display:inline-flex;align-items:center;gap:6px}
+  nav .links{margin-left:auto;display:flex;align-items:center;gap:20px;font-size:.92rem}
+  nav .links a.sec{color:var(--mut)} nav .links a.sec:hover{color:var(--txt)}
+  .lang{display:inline-flex;gap:2px;font-family:Sora;font-size:.78rem}
+  .lang a{color:var(--mut);padding:.2em .45em;border-radius:6px} .lang a.on{color:var(--amb);background:rgba(226,162,59,.12)}
+  .tgl{background:var(--bg2);border:1px solid var(--line);color:var(--txt);width:38px;height:38px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:1.05rem}
+  .tgl:hover{border-color:var(--amb)}
+  .btn{display:inline-block;background:var(--amb);color:#1a1206;font-weight:600;padding:.6em 1.05em;border-radius:10px;font-family:Sora}
+  .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+  @media(max-width:1060px){nav .links a.sec{display:none}}
+  @media(max-width:520px){nav .wrap{gap:8px;padding:8px 14px;height:auto;flex-wrap:wrap} nav .links{gap:8px;margin-left:0;width:100%;justify-content:space-between} nav .btn{padding:.45em .7em;font-size:.82rem} .tgl{width:34px;height:34px}}
+  .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+  .hero .glow{position:absolute;inset:-40% -20% auto auto;width:70%;height:600px;background:radial-gradient(closest-side,rgba(226,162,59,.22),transparent 70%);pointer-events:none}
+  .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding:74px 22px}
+  .hero h1{font-size:clamp(2.2rem,5vw,3.5rem);font-weight:800;letter-spacing:-.025em}
+  .hero p.lead{font-size:1.18rem;color:var(--mut);margin:1.1em 0 1.6em;max-width:34ch}
+  .hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .hero figure{margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px -30px #000}
+  .hero figure img{width:100%;height:auto;display:block}
+  .resumo{padding:38px 0 34px;border-bottom:1px solid var(--line)}
+  .resumo p{font-size:1.12rem;line-height:1.7;max-width:74ch;margin:.55em 0 0}
+  @media(max-width:780px){.hero .wrap{grid-template-columns:1fr;padding:48px 22px}}
+  section{padding:62px 0;border-bottom:1px solid var(--line)}
+  section h2{font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:800;letter-spacing:-.02em}
+  section .sub{color:var(--mut);margin:.6em 0 2em;max-width:62ch}
+  .grid{display:grid;gap:16px}
+  .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:820px){.g3,.g4{grid-template-columns:1fr 1fr}}
+  @media(max-width:540px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .card h3{font-size:1.05rem;margin-bottom:.4em}
+  .card p{color:var(--mut);font-size:.92rem;margin:0}
+  .num{display:inline-flex;width:30px;height:30px;align-items:center;justify-content:center;border-radius:8px;background:rgba(226,162,59,.14);color:var(--amb);font-family:Sora;font-weight:800;font-size:.9rem;margin-bottom:.7em}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+  .flow span{background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:.45em .9em;font-size:.85rem;font-family:Sora;font-weight:600}
+  .flow .arr{color:var(--amb);border:none;background:none;padding:0 .1em}
+  pre{background:#0a0a0e;border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow:auto;font-size:.86rem;line-height:1.6;color:#d6d6e0}
+  pre .c{color:#6f6f7c} pre .k{color:var(--amb2)} pre .s{color:#9ece6a}
+  .step{display:grid;grid-template-columns:46px minmax(0,1fr);gap:16px;margin-bottom:26px}
+  .step>div,.card{min-width:0}
+  p code,li code,td code{overflow-wrap:anywhere}
+  .step .b{width:46px;height:46px;border-radius:12px;background:var(--amb);color:#1a1206;font-family:Sora;font-weight:800;font-size:1.25rem;display:flex;align-items:center;justify-content:center}
+  .step h3{font-size:1.12rem;margin-bottom:.3em}
+  .step p{color:var(--mut);margin:.2em 0 .7em}
+  .step ul{color:var(--mut);margin:.2em 0 .7em;padding-left:1.2em}
+  .phase{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .phase:last-child{border:none}
+  .phase .tag{flex:0 0 92px;font-family:Sora;font-weight:800;color:var(--amb)}
+  .phase .d strong{display:block;margin-bottom:.2em}
+  .phase .d span{color:var(--mut);font-size:.92rem}
+  footer{padding:46px 0;text-align:center;color:var(--mut);font-size:.9rem}
+  .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:.3em .8em;font-size:.78rem;color:var(--mut);margin:0 4px}
+  /* tabelas e camadas (acrescimo deste guia) */
+  .tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+  .tbl table{border-collapse:collapse;width:100%;min-width:720px;font-size:.88rem}
+  .tbl th,.tbl td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  .tbl th{font-family:Sora;font-size:.8rem;color:var(--amb);background:var(--bg2)}
+  .tbl td:first-child{font-weight:600;color:var(--txt)}
+  .tbl td{color:var(--mut)} .tbl tr:last-child td{border-bottom:none}
+  .tbl .bad{color:#f87171} .tbl .ok{color:#4ade80}
+  .layers{display:grid;gap:14px}
+  .layer{display:grid;grid-template-columns:64px minmax(0,1fr);gap:16px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amb);border-radius:14px;padding:18px}
+  .layer .n{font-family:Sora;font-weight:800;font-size:1.6rem;color:var(--amb);text-align:center}
+  .layer h3{font-size:1.08rem;margin-bottom:.25em} .layer p{margin:0;color:var(--mut);font-size:.92rem}
+  .layer.opt{border-left-color:var(--mut);opacity:.92}
+  .big321{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:620px){.big321{grid-template-columns:1fr}}
+  .big321 .card{text-align:center} .big321 b{display:block;font-family:Sora;font-size:3rem;color:var(--amb);line-height:1}
+  .alert{background:rgba(226,162,59,.08);border:1px solid rgba(226,162,59,.35);border-radius:14px;padding:16px 18px;color:var(--txt);margin-top:18px}
+  dl.glos{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:10px 22px;margin:0}
+  dl.glos dt{font-family:Sora;font-weight:600;color:var(--amb)} dl.glos dd{margin:0;color:var(--mut)}
+  @media(max-width:620px){dl.glos{grid-template-columns:1fr} dl.glos dd{margin-bottom:8px}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="brand" href="#top"><span class="emoji">🛡️</span> Protege tus repos</a>
+  <span class="sep">|</span>
+  <span class="clubpro">
+    <a class="inema" href="https://inema.club" target="_blank" rel="noopener">INEMA.CLUB</a>
+    <span class="sep">-</span>
+    <a class="pro" href="https://inema.pro" target="_blank" rel="noopener">PRO</a>
+  </span>
+  <div class="links">
+    <a class="sec" href="#oque">El problema</a>
+    <a class="sec" href="#fluxo">Las capas</a>
+    <a class="sec" href="#guia">Paso a paso</a>
+    <a class="sec" href="#limites">Límites</a>
+    <a class="sec" href="#migrar">¿Migrar?</a>
+    <span class="lang"><a href="../">PT</a><a href="../en/">EN</a><a class="on" href="./">ES</a></span>
+    <button class="tgl" id="themeToggle" aria-label="Cambiar tema" title="Cambiar tema">🌙</button>
+    <a class="btn" href="https://github.com/inematds/protegendo-seus-repos" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</div></nav>
+
+<header class="hero" id="top">
+  <div class="glow"></div>
+  <div class="wrap">
+    <div>
+      <span class="chip">Guía general · copias de seguridad de código</span>
+      <h1>Tus repos <span class="amb">protegidos</span> contra bloqueos e invasiones</h1>
+      <p class="lead">Si mañana desaparece tu cuenta, el código sigue siendo tuyo. Un plan por capas, sencillo y casi totalmente gratis.</p>
+      <div class="cta">
+        <a class="btn" href="#guia">Empezar la guía</a>
+        <a class="btn ghost" href="https://github.com/inematds/protegendo-seus-repos" target="_blank" rel="noopener">Ver en GitHub</a>
+      </div>
+    </div>
+    <figure><img src="../assets/banner-es.jpg" alt="Banner: tus repos protegidos — copias de seguridad en capas contra bloqueos e invasiones"></figure>
+  </div>
+</header>
+
+<section id="resumo" class="resumo"><div class="wrap">
+  <span class="chip">En resumen</span>
+  <p>Esta guía es para quienes guardan código en GitHub (o en un servicio parecido) y quieren estar preparados para el día en que bloqueen o vulneren su cuenta. Explica por qué copiar todo a otra cuenta del mismo servicio ofrece poca protección y presenta un plan de tres capas: una copia en otra empresa, copias fechadas en un disco propio y, si quieres, un servidor propio. Incluye los comandos de git para cada paso, los límites de los planes gratis y qué cambiaría si dejaras GitHub de una vez. No hace falta instalar nada para leerla: aquí tienes la idea y el método, listos para ponerlos en práctica.</p>
+</div></section>
+
+<section id="oque"><div class="wrap">
+  <span class="chip">El problema</span>
+  <h2>Tener todo en un solo lugar crea un punto único de falla</h2>
+  <p class="sub">El código, el historial, las páginas publicadas, las automatizaciones y el deploy suelen estar en el mismo servicio. Un solo incidente puede dejarlo todo fuera de línea.</p>
+  <figure style="margin:0 0 26px;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px -30px #000"><img src="../assets/banner-grade-es.jpg" alt="Banner en cuadrícula: otra cuenta no basta, GitLab sin vínculos, copias fechadas, Forgejo en la VPS, prueba la restauración, límites de los planes" loading="lazy" style="width:100%;display:block"></figure>
+  <div class="grid g3">
+    <div class="card"><h3>🚫 Bloqueo de la cuenta</h3><p>Una denuncia, un robot antifraude, un error de política. La cuenta queda suspendida y ni siquiera puedes descargar lo que es tuyo.</p></div>
+    <div class="card"><h3>🕵️ Invasión</h3><p>Alguien obtiene un token o la contraseña y borra repositorios, o reescribe el historial con un <code>push --force</code>.</p></div>
+    <div class="card"><h3>💻 «Tengo las carpetas aquí»</h3><p>Eso no es una copia de seguridad. Falta lo que no clonaste, faltan ramas y tu computadora también puede ser el blanco de una invasión.</p></div>
+  </div>
+
+  <h2 style="margin-top:52px">La primera idea: duplicar todo en otra cuenta de GitHub</h2>
+  <p class="sub">Técnicamente es fácil y <code>--mirror</code> copia todo: commits, ramas y etiquetas. El problema es dónde queda la copia.</p>
+<pre><span class="k">git clone --mirror</span> <span class="s">https://github.com/conta-original/projeto.git</span>
+<span class="k">cd</span> projeto.git
+<span class="k">git push --mirror</span> <span class="s">https://github.com/conta-backup/projeto.git</span>
+<span class="c"># primero, crea el repo vacío en la cuenta de backup (GitHub no lo crea al hacer push)</span>
+<span class="c"># el aviso "deny updating a hidden ref" en refs/pull/* es esperado: son los PR</span></pre>
+  <p class="mut" style="font-size:.85rem;margin:18px 0 6px">En el celular, desliza las tablas hacia un lado.</p><div class="tbl"><table>
+    <tr><th>Escenario</th><th>¿La otra cuenta de GitHub sirve?</th><th>Por qué</th></tr>
+    <tr><td>Bloqueo</td><td class="bad">Tal vez no</td><td>Es la misma empresa. Las cuentas vinculadas por el mismo correo, teléfono o computadora pueden caer juntas. Además, los términos limitan el número de cuentas gratis por persona.</td></tr>
+    <tr><td>Invasión</td><td class="bad">No</td><td>Si la misma computadora guarda los tokens de las dos cuentas, quien la invada obtiene ambos y borra el original y la copia.</td></tr>
+    <tr><td>Daño al repo</td><td class="bad">No</td><td>Un espejo que se sincroniza solo copia el daño (repo borrado, historial reescrito) en la siguiente ejecución.</td></tr>
+  </table></div>
+  <div class="alert"><b>Qué incluye y qué no incluye una copia de git.</b> Incluye: código, historial, ramas y etiquetas. La wiki es un repo aparte (<code>projeto.wiki.git</code>): solo se incluye si también la clonas. No incluye: issues, pull requests, comentarios, estrellas, releases con archivos adjuntos, secrets, webhooks ni la configuración de Pages. Los archivos en Git LFS necesitan <code>git lfs fetch --all</code> + <code>git lfs push --all</code>.</div>
+</div></section>
+
+<section id="fluxo"><div class="wrap">
+  <span class="chip">Las capas</span>
+  <h2>La regla de oro de las copias de seguridad: 3-2-1</h2>
+  <p class="sub">Una copia solo protege si está en otro lugar, tiene otra clave y conserva versiones anteriores.</p>
+  <div class="big321">
+    <div class="card"><b>3</b><p>copias de tus datos: el original + 2</p></div>
+    <div class="card"><b>2</b><p>lugares diferentes: por ejemplo, la nube y un disco</p></div>
+    <div class="card"><b>1</b><p>fuera de casa: si la casa se incendia, sobrevive</p></div>
+  </div>
+  <div class="alert">Y una cuarta regla contra las invasiones: <b>al menos una copia que tu computadora de todos los días no pueda borrar.</b> En el plan de abajo, la copia que cumple esta regla es la copia fuera de casa que descarga la VPS (paso 7).</div>
+
+  <h2 style="margin-top:52px">El plan recomendado</h2>
+  <p class="sub">Sigues trabajando en GitHub como siempre. Todos los días, una rutina copia todo en tres lugares.</p>
+  <div class="flow" style="margin-bottom:22px">
+    <span>GitHub (donde trabajas)</span><span class="arr">→</span>
+    <span>GitLab (otra empresa)</span><span class="arr">+</span>
+    <span>Copias fechadas en el disco</span><span class="arr">+</span>
+    <span>Forgejo en la VPS (opcional)</span>
+  </div>
+  <div class="layers">
+    <div class="layer"><div class="n">1</div><div><h3>GitLab, en una cuenta sin vínculos</h3><p>Otra empresa: un bloqueo en GitHub no llega hasta allí. Cuenta con correo, teléfono y 2FA nuevos, repos privados y un token que envía código, pero no puede borrar proyectos.</p></div></div>
+    <div class="layer"><div class="n">2</div><div><h3>Copias fechadas en tu disco</h3><p>Un espejo de cada repo en un disco tuyo, más una «foto» por día. Si borran o dañan un repo allá afuera, las fotos antiguas siguen intactas: puedes volver al día que quieras.</p></div></div>
+    <div class="layer opt"><div class="n">3</div><div><h3>Forgejo en una VPS (opcional)</h3><p>Un «GitHub tuyo» en un servidor alquilado. Ninguna empresa puede bloquearlo. Requiere mantenimiento, por eso es la tercera copia y no la única. Instalación (binario o Docker): <a href="https://forgejo.org/docs/latest/admin/installation/" target="_blank" rel="noopener">forgejo.org/docs</a>; después, el envío es igual que en GitLab, solo cambia la dirección.</p></div></div>
+  </div>
+</div></section>
+
+<section id="pre"><div class="wrap">
+  <span class="chip">Antes de empezar</span>
+  <h2>Qué necesitas</h2>
+  <p class="sub">No hace falta pagar. git resuelve casi todo.</p>
+  <div class="grid g3">
+    <div class="card"><h3>git y gh instalados</h3><p>git en cualquier Linux, Mac o Windows. <code>gh</code> es el programa de línea de comandos de GitHub: muestra tus repos y permite acceder a los privados.</p><pre><span class="k">git --version</span>
+<span class="k">gh auth login</span></pre></div>
+    <div class="card"><h3>Un disco con espacio</h3><p>Suma el tamaño de tus repos y reserva unas 3 veces esa cantidad para las fotos. Sirve un disco externo. Los ejemplos usan la carpeta <code>/backup</code>; créala una vez y úsala como propia.</p><pre><span class="k">df -h</span>   <span class="c"># espacio libre</span>
+<span class="k">sudo mkdir -p</span> /backup &amp;&amp; <span class="k">sudo chown</span> $USER /backup</pre></div>
+    <div class="card"><h3>Una cuenta nueva en GitLab</h3><p>En gitlab.com, con un correo y un teléfono que no uses en tus otras cuentas, y con 2FA activado.</p><pre><span class="c"># gitlab.com → Register</span></pre></div>
+  </div>
+</div></section>
+
+<section id="guia"><div class="wrap">
+  <span class="chip">Paso a paso</span>
+  <h2>De cero a una copia de seguridad probada</h2>
+  <p class="sub">Los comandos de abajo usan <code>conta</code>, <code>projeto</code> y <code>/backup</code> como ejemplo: reemplázalos por tus nombres y carpetas.</p>
+  <p class="mut">Los nombres de carpetas y variables de los comandos están en portugués a propósito; puedes cambiarlos por los que quieras.</p>
+
+  <div class="step"><div class="b">1</div><div>
+    <h3>Cierra las puertas antes (prevención)</h3>
+    <p>Cuesta poco y evita la mayoría de los problemas.</p>
+    <ul>
+      <li>Activa 2FA en todas las cuentas, de preferencia con una app o una llave física, no por SMS.</li>
+      <li>Borra los tokens y las claves SSH antiguas que ya no uses.</li>
+      <li>Usa tokens «fine-grained»: solo los permisos necesarios y con fecha de vencimiento.</li>
+      <li>Activa la protección de ramas (bloquear <code>push --force</code> y la eliminación) en los repos importantes. En GitHub gratis solo existe en repos públicos; para los privados se necesita un plan de pago. En GitLab, la rama principal ya viene protegida.</li>
+    </ul>
+  </div></div>
+
+  <div class="step"><div class="b">2</div><div>
+    <h3>Crea una cuenta de copia de seguridad sin vínculos</h3>
+    <p>En GitLab, con un correo, teléfono y 2FA distintos a los de tus otras cuentas. Nunca la agregues como colaboradora de las otras cuentas, no hagas un fork ni actives Pages. No necesitas crear los proyectos uno por uno: con el primer envío, GitLab crea el proyecto <b>privado</b> automáticamente («push to create»).</p>
+  </div></div>
+
+  <div class="step"><div class="b">3</div><div>
+    <h3>Un token que envía, pero no borra</h3>
+    <p>En GitLab, haz clic en tu avatar → <i>Edit profile</i> → <i>Access tokens</i> (Personal access tokens) y crea un token solo con los permisos <code>read_repository</code> y <code>write_repository</code>, y con fecha de vencimiento. Sin el permiso <code>api</code>, no puede borrar proyectos.</p>
+    <p>En GitHub, crea también un token <i>fine-grained</i> de solo lectura (<i>Settings → Developer settings → Fine-grained tokens</i>, todos los repos, permiso <i>Contents: Read-only</i>). La rutina lo usa en cron, donde el inicio de sesión normal de <code>gh</code> (guardado en el llavero del sistema) no funciona.</p>
+    <p>Guarda los dos en un archivo que solo tú puedas leer. <code>read -s</code> pide el token sin mostrarlo en pantalla ni guardarlo en el historial de la terminal:</p>
+<pre><span class="k">mkdir -p</span> ~/.config/backup-repos
+<span class="k">read -rs -p</span> <span class="s">"token do GitLab: "</span> T1; <span class="k">echo</span>
+<span class="k">read -rs -p</span> <span class="s">"token do GitHub: "</span> T2; <span class="k">echo</span>
+<span class="k">printf</span> <span class="s">'GITLAB_TOKEN=%s\nGH_TOKEN=%s\n'</span> "$T1" "$T2" &gt; ~/.config/backup-repos/tokens.env
+<span class="k">chmod 600</span> ~/.config/backup-repos/tokens.env; <span class="k">unset</span> T1 T2</pre>
+    <p>Lo que <b>no</b> impide: quien invada tu computadora aún puede enviar commits o sobrescribir ramas sin protección. En GitLab, solo la rama principal viene protegida (las demás aceptan <code>push --force</code> y el token puede borrarlas). La rama principal rechaza el <code>push --force</code>; por eso la rutina del paso 7 avisa cuando GitLab rechaza algo. De lo demás se encargan las copias fechadas del paso 5.</p>
+  </div></div>
+
+  <div class="step"><div class="b">4</div><div>
+    <h3>Arma el espejo local de cada repo</h3>
+    <p>Un clon <code>--mirror</code> guarda todas las ramas y etiquetas. Después, la rutina diaria solo lo actualiza. Para repos privados, ejecuta una vez <code>gh auth setup-git</code>: git empezará a pedir la contraseña a <code>gh</code>, que usa el <code>GH_TOKEN</code> del archivo.</p>
+<pre><span class="k">mkdir -p</span> /backup/espelho
+<span class="k">git clone --mirror</span> <span class="s">https://github.com/conta/projeto.git</span> /backup/espelho/projeto.git
+<span class="c"># todo dia:</span>
+<span class="k">git -C</span> /backup/espelho/projeto.git <span class="k">remote update --prune</span></pre>
+  </div></div>
+
+  <div class="step"><div class="b">5</div><div>
+    <h3>Guarda la copia del día</h3>
+    <p>Un <code>git bundle</code> es un solo archivo con el repo completo. git no crea la carpeta por sí solo, por eso se necesita <code>mkdir -p</code>.</p>
+<pre><span class="k">DIA=$(date +%F)</span>                          <span class="c"># ex.: 2026-11-05</span>
+<span class="k">mkdir -p</span> /backup/fotos/$DIA
+<span class="k">git -C</span> /backup/espelho/projeto.git <span class="k">bundle create</span> /backup/fotos/$DIA/projeto.bundle <span class="k">--all</span>
+<span class="k">git -C</span> /backup/espelho/projeto.git <span class="k">bundle verify</span> /backup/fotos/$DIA/projeto.bundle   <span class="c"># verifica el archivo</span>
+<span class="c"># alternativa: una instantánea de la carpeta /backup/espelho con restic o borg</span></pre>
+  </div></div>
+
+  <div class="step"><div class="b">6</div><div>
+    <h3>Envía todo a GitLab</h3>
+    <p>Envía las ramas y las etiquetas (<code>--all</code> + <code>--tags</code>), y no uses <code>--mirror</code>. Así, si borran una rama en GitHub, no se borra en la copia, y las referencias internas de pull request (<code>refs/pull/*</code>), que darían error, quedan fuera.</p>
+<pre><span class="k">set -a</span>; <span class="k">source</span> ~/.config/backup-repos/tokens.env; <span class="k">set +a</span>
+<span class="k">U=</span><span class="s">"https://oauth2:$GITLAB_TOKEN@gitlab.com/conta-backup/projeto.git"</span>
+<span class="k">git -C</span> /backup/espelho/projeto.git <span class="k">push</span> "$U" <span class="k">--all</span>
+<span class="k">git -C</span> /backup/espelho/projeto.git <span class="k">push</span> "$U" <span class="k">--tags</span></pre>
+  </div></div>
+
+  <div class="step"><div class="b">7</div><div>
+    <h3>Reúne todo en una rutina para todos tus repos</h3>
+    <p>Un script recorre la lista de repos de tu cuenta, completa los pasos 4 al 6 para cada uno, borra las fotos antiguas y registra los errores. Guárdalo como <code>/backup/rotina-diaria.sh</code> y ejecuta <code>chmod +x</code>. Cambia las dos cuentas de la parte superior.</p>
+<pre><span class="k">#!/usr/bin/env bash</span>
+<span class="c"># rotina-diaria.sh — espelho + foto do dia + envio ao GitLab</span>
+<span class="k">set -u</span>
+CONTA=<span class="s">sua-conta-github</span>; GL=<span class="s">sua-conta-gitlab</span>
+<span class="k">set -a</span>; <span class="k">source</span> ~/.config/backup-repos/tokens.env; <span class="k">set +a</span>   <span class="c"># GITLAB_TOKEN e GH_TOKEN</span>
+BASE=/backup; DIA=$(date +%F); FALHAS=0
+<span class="k">mkdir -p</span> "$BASE/espelho" "$BASE/fotos/$DIA"
+<span class="c"># se a lista falhar ou vier vazia, para e registra: nunca grava "0 falha(s)" sem ter copiado nada</span>
+LISTA=$(gh repo list "$CONTA" --limit 2000 --json name -q '.[].name') &amp;&amp; [ -n "$LISTA" ] || { echo "$DIA: ERRO gh repo list falhou" &gt;&gt; "$BASE/rotina.log"; exit 1; }
+<span class="k">for</span> R <span class="k">in</span> $LISTA; <span class="k">do</span>
+  E="$BASE/espelho/$R.git"
+  [ -d "$E" ] || git clone -q --mirror "https://github.com/$CONTA/$R.git" "$E"
+  git -C "$E" remote update --prune &gt;/dev/null || { echo "falhou atualizar $R"; FALHAS=$((FALHAS+1)); continue; }
+  [ -n "$(git -C "$E" for-each-ref)" ] || continue          <span class="c"># repo vazio: nada a guardar</span>
+  git -C "$E" bundle create -q "$BASE/fotos/$DIA/$R.bundle" --all || { echo "foto falhou $R"; FALHAS=$((FALHAS+1)); }
+  U="https://oauth2:$GITLAB_TOKEN@gitlab.com/$GL/$R.git"
+  { git -C "$E" push -q "$U" --all &amp;&amp; git -C "$E" push -q "$U" --tags; } || { echo "GitLab recusou $R"; FALHAS=$((FALHAS+1)); }
+<span class="k">done</span>
+<span class="c"># rotação: apaga fotos com mais de 35 dias, menos as do dia 01 (ficam como mensais; apague à mão as muito antigas)</span>
+find "$BASE/fotos" -mindepth 1 -maxdepth 1 -type d -mtime +35 ! -name '*-01' -exec rm -rf {} +
+echo "$DIA: $FALHAS falha(s)" &gt;&gt; "$BASE/rotina.log"</pre>
+    <p>Ejecuta el script a mano una vez (<code>/backup/rotina-diaria.sh</code>) antes de programarlo: con cientos de repos, la primera vez puede tardar horas. Después, en cron (<code>crontab -e</code>), agrega el PATH en la primera línea, porque cron no carga el del terminal:</p>
+<pre>PATH=/usr/local/bin:/usr/bin:/bin
+<span class="k">0 3 * * *</span> /backup/rotina-diaria.sh &gt;&gt; /backup/cron.log 2&gt;&amp;1</pre>
+    <p>Para saber si se ejecutó: <code>tail /backup/cron.log</code> y <code>tail /backup/rotina.log</code>.</p>
+    <p><b>Repositorios de una organización o de clientes:</b> <code>gh repo list "$CONTA"</code> solo muestra los repos de tu cuenta. Los de una organización (o de clientes que te dieron acceso) quedan fuera sin aviso. Ejecuta el script una vez por cada propietario (cambia <code>CONTA</code> por el nombre de la organización) y, en el token de GitHub, elige cada propietario en <i>Resource owner</i> o crea un token por propietario.</p>
+    <p><b>Fuera de casa, sin darle la llave a quien invada:</b> la VPS descarga las fotos de tu computadora una vez por semana. Así, tu computadora no tiene ningún acceso a la VPS y no puede borrar esa copia. La VPS necesita conectarse a tu computadora por SSH (por ejemplo, con Tailscale). Este cron va <b>en la VPS</b>:</p>
+<pre><span class="k">0 5 * * 0</span> rsync -a usuario@sua-maquina:/backup/fotos/ /backup/fotos/</pre>
+    <p>Ten en cuenta que la VPS pasa a tener acceso a tu computadora. En su clave (en el <code>~/.ssh/authorized_keys</code> de tu computadora), limita el acceso a solo lectura de las fotos con <code>command="rrsync -ro /backup/fotos"</code>; con esa restricción, la ruta pasa a ser relativa a la carpeta autorizada y el cron de la VPS queda <code>0 5 * * 0 rsync -a usuario@sua-maquina:/ /backup/fotos/</code>. <code>rrsync</code> viene con rsync 3.2.4 o posterior (<code>/usr/bin/rrsync</code>); en las versiones anteriores, está en <code>/usr/share/doc/rsync/scripts/rrsync.gz</code>. Primero crea la carpeta <code>/backup/fotos</code> en la VPS. Como rsync se ejecuta sin <code>--delete</code>, la VPS nunca borra fotos: su disco solo crece, así que límpialo de vez en cuando.</p>
+    <p>Si la VPS no puede conectarse a tu computadora, la alternativa es usar <code>restic</code> con un <code>rest-server --append-only</code> en la VPS: tu computadora puede agregar fotos, pero no borrarlas.</p>
+    <p>Revisa el archivo <code>/backup/rotina.log</code> de vez en cuando: lo que quieres ver es «0 falha(s)». Si GitLab rechaza un repo todos los días, casi siempre se debe a un <code>push --force</code> legítimo en GitHub (un rebase, por ejemplo): confirma que lo hiciste tú y, si fue así, permite el force-push de esa rama en GitLab solo durante una ejecución. Tres observaciones: la rutina no guarda las wikis (para guardarlas, repite el clon con <code>$R.wiki.git</code>); tampoco guarda los archivos en Git LFS (para eso, ejecuta <code>git lfs fetch --all</code> en el espejo); además, el token de la URL aparece en la lista de procesos de la computadora, así que, si es compartida, usa un <i>credential helper</i> de git.</p>
+  </div></div>
+
+  <div class="step"><div class="b">8</div><div>
+    <h3>Prueba la restauración (la parte que todos olvidan)</h3>
+    <p>Elige 3 repos, restáuralos en un lugar nuevo y compara. Una copia de seguridad que nunca se ha restaurado es solo una esperanza.</p>
+<pre><span class="k">git clone --mirror</span> /backup/fotos/2026-11-05/projeto.bundle projeto.git
+<span class="k">cd</span> projeto.git
+<span class="k">git log --oneline --all | wc -l</span>       <span class="c"># nº de commits: compare com o espelho em /backup/espelho</span>
+<span class="k">git for-each-ref | wc -l</span>              <span class="c"># nº de branches + tags: compare também com o espelho</span>
+<span class="k">git push</span> <span class="s">https://gitlab.com/conta-nova/projeto.git</span> <span class="k">--all</span>    <span class="c"># sobe as branches para qualquer serviço</span>
+<span class="k">git push</span> <span class="s">https://gitlab.com/conta-nova/projeto.git</span> <span class="k">--tags</span>   <span class="c"># e as tags</span></pre>
+    <p>Compara con el espejo, no con el repo de GitHub: el espejo y la copia también contienen los <code>refs/pull/*</code>, que el repo normal no muestra. Por la misma razón, la restauración usa <code>--all</code> + <code>--tags</code> y no <code>--mirror</code>.</p>
+  </div></div>
+
+  <div class="alert"><b>¿Y las issues, los PR y los releases?</b> git no los incluye. Para guardarlos también: GitHub exporta todos los datos de tu cuenta en <i>Settings → Account → Export account data</i>; <code>gh</code> guarda los datos por repo (<code>gh issue list --state all --json number,title,body,comments &gt; issues.json</code>); y el importador de GitLab (<i>New project → Import project → GitHub</i>) trae las issues y los PR de un repo de una vez. Atención: el importador pide un token de GitHub dentro de la cuenta de GitLab, lo que vincula ambas cuentas; si lo usas, hazlo en una tercera cuenta, no en la de copia de seguridad.</div>
+</div></section>
+
+<section id="limites"><div class="wrap">
+  <span class="chip">Comparación</span>
+  <h2>Los límites de los planes gratis</h2>
+  <p class="sub">Verificado en noviembre de 2026. Los datos de GitHub, GitLab y Codeberg vienen de sus páginas oficiales; los de Bitbucket, de sitios de terceros. Los límites cambian: compruébalos antes de decidir.</p>
+  <div class="tbl"><table>
+    <tr><th></th><th>GitHub</th><th>GitLab.com</th><th>Codeberg</th><th>Bitbucket</th><th>Forgejo en tu VPS</th></tr>
+    <tr><td>Tamaño por repo</td><td>~1 GB recomendado, archivo máx. 100 MB</td><td class="ok">10 GiB por proyecto</td><td>~750 MiB (para más, hay que pedirlo)</td><td>no confirmado: consulta el límite actual por workspace</td><td class="ok">el disco de la VPS</td></tr>
+    <tr><td>Push máximo</td><td>2 GB</td><td>5 GiB</td><td>—</td><td>—</td><td>sin límite</td></tr>
+    <tr><td>Repos privados</td><td>ilimitados</td><td class="ok">ilimitados</td><td class="bad">solo 100 MB en total</td><td>ilimitados</td><td>ilimitados</td></tr>
+    <tr><td>CI (minutos/mes)</td><td>2.000 en privados, ilimitado en públicos</td><td>400</td><td>pocos, bajo solicitud</td><td class="bad">50</td><td class="ok">ilimitado</td></tr>
+    <tr><td>Pages</td><td>1 GB por sitio</td><td>1 GB, dominio propio</td><td>sí</td><td>sí (workspace.bitbucket.io)</td><td>tú lo configuras</td></tr>
+    <tr><td>Usuarios</td><td>ilimitados</td><td>5 por grupo privado</td><td>—</td><td>5</td><td>ilimitados</td></tr>
+    <tr><td>Reglas de contenido</td><td>generales</td><td>generales</td><td class="bad">solo software libre; restringe el contenido de IA; las copias de seguridad no son bienvenidas</td><td>generales</td><td class="ok">las tuyas</td></tr>
+  </table></div>
+  <div class="grid g2" style="margin-top:22px">
+    <div class="card"><h3>✅ GitLab: el lugar de la copia en la nube</h3><p>Hay espacio para quienes tienen cientos de repos. Los 400 minutos de CI no importan: la copia no ejecuta CI.</p></div>
+    <div class="card"><h3>⛔ Codeberg: excelente, pero no para copias</h3><p>Está pensado para software libre. Sus términos actuales restringen el contenido generado por IA, permiten poco contenido privado y no favorecen su uso como copia de seguridad.</p></div>
+    <div class="card"><h3>🟡 Bitbucket: funciona, pero no destaca</h3><p>Sirve para copias puras, pero 50 minutos de CI y 5 usuarios no lo convierten en un hogar definitivo.</p></div>
+    <div class="card"><h3>🏠 Forgejo: la opción más independiente</h3><p>No necesitas una cuenta en ninguna empresa. El costo es encargarte del servidor: actualizaciones y seguridad.</p></div>
+  </div>
+  <h2 style="margin-top:52px">Dos términos que aparecen mucho</h2>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card"><h3>⚙️ CI (integración continua)</h3><p>Automatización que se ejecuta sola con cada <code>git push</code>: publica la página, ejecuta pruebas y compila. En GitHub se llama Actions. La ejecuta un «runner»: la máquina del servicio consume «minutos por mes»; la tuya, no. Para las copias de seguridad, CI no importa.</p></div>
+    <div class="card"><h3>🏗️ Forgejo</h3><p>Programa libre que funciona como un «GitHub tuyo», instalado en tu servidor: repos, issues, pull requests, wiki y releases. Es lo que funciona detrás de Codeberg. Es ligero: cabe en una VPS pequeña. Tiene su propio CI (Forgejo Actions), casi igual que GitHub Actions.</p></div>
+  </div>
+</div></section>
+
+<section id="migrar"><div class="wrap">
+  <span class="chip">¿Y si quiero irme definitivamente?</span>
+  <h2>Qué cambia con una migración definitiva</h2>
+  <p class="sub">Es posible, pero afecta todo lo que se construyó sobre GitHub. Ejemplo real de un creador de contenido con unos 860 repos:</p>
+  <div class="tbl"><table>
+    <tr><th>Lo que existe hoy</th><th>Qué cambia</th></tr>
+    <tr><td>~690 enlaces <code>usuario.github.io/...</code> en el sitio, en grupos y en descripciones de videos</td><td>Se convierten en <code>usuario.gitlab.io/projeto</code>. Los enlaces antiguos dejan de funcionar, y no se pueden corregir en bloque las descripciones de videos ni los mensajes de grupo.</td></tr>
+    <tr><td>Páginas bien posicionadas en Google</td><td>Empiezan desde cero en la nueva dirección.</td></tr>
+    <tr><td>~320 repos con workflows de Actions</td><td>En GitLab, cada uno se convierte en <code>.gitlab-ci.yml</code>; el plan gratis da solo 400 minutos al mes, a menos que uses tu propio runner.</td></tr>
+    <tr><td>~20 sitios con deploy mediante Vercel</td><td>Vercel acepta GitLab, pero hay que volver a conectar cada sitio. Codeberg no se conecta.</td></tr>
+    <tr><td>~70 scripts que usan <code>gh</code></td><td>Se cambian por <code>glab</code> (GitLab) o por la API de Forgejo.</td></tr>
+    <tr><td>Comunidad, estrellas y descubrimiento de proyectos</td><td>Se quedan en GitHub.</td></tr>
+  </table></div>
+  <div class="grid g2" style="margin-top:22px">
+    <div class="card"><h3>➕ Ventajas de migrar</h3><p>Independencia de una sola empresa; CI, registro de imágenes y Pages en un solo lugar en GitLab; la opción de alojar tu propio servidor más adelante; otra política de datos.</p></div>
+    <div class="card"><h3>🎯 La conclusión</h3><p>Para quienes ya tienen una presencia grande en GitHub, migrar por completo cuesta mucho para obtener algo que las copias en capas ya ofrecen. Haz la copia de seguridad y cambia lo que realmente te ata: la dirección de las páginas.</p></div>
+  </div>
+  <div class="alert"><b>El paso que de verdad elimina la dependencia: un dominio propio.</b> Publica las páginas nuevas en una dirección tuya (ej.: <code>guias.seudominio.com/projeto</code>). Si algún día cambias de servicio, modificas el DNS y ningún enlace se rompe.</div>
+</div></section>
+
+<section id="glossario"><div class="wrap">
+  <span class="chip">Glosario</span>
+  <h2>Los términos, en una línea</h2>
+  <p class="sub">Para quienes están empezando.</p>
+  <dl class="glos">
+    <dt>Repositorio (repo)</dt><dd>La carpeta del proyecto con todo el historial de cambios, administrada por git.</dd>
+    <dt>Espejo (<code>--mirror</code>)</dt><dd>Copia completa de un repo, con todas sus ramas y etiquetas, que se puede actualizar.</dd>
+    <dt>Bundle</dt><dd>Un solo archivo que contiene un repo completo; permite clonar desde él.</dd>
+    <dt>Token</dt><dd>Una «contraseña de máquina» con permisos limitados, que usan los scripts.</dd>
+    <dt>Fine-grained token</dt><dd>Token que te permite elegir qué puede hacer, en qué repos y hasta cuándo.</dd>
+    <dt>2FA</dt><dd>Verificación en dos pasos: contraseña + app o llave física.</dd>
+    <dt>CI / runner</dt><dd>Automatización que se ejecuta con cada push / la máquina que ejecuta esa automatización.</dd>
+    <dt>Pages</dt><dd>Alojamiento gratis de un sitio estático desde un repo.</dd>
+    <dt>Forgejo</dt><dd>Programa libre para tener tu propio «GitHub» en un servidor.</dd>
+    <dt>VPS</dt><dd>Servidor alquilado en la nube, solo para ti.</dd>
+    <dt><code>push --force</code></dt><dd>Envío que sobrescribe el historial del otro lado; así puede borrar trabajo quien invade una cuenta.</dd>
+    <dt>Rama protegida</dt><dd>Rama en la que el servicio rechaza <code>push --force</code> y la eliminación.</dd>
+    <dt>Git LFS</dt><dd>Extensión de git para archivos grandes (video, modelo, dataset), guardados aparte.</dd>
+    <dt>cron / timer do systemd</dt><dd>El «despertador» de Linux: ejecuta un comando por sí solo a la hora programada.</dd>
+    <dt>restic / borg</dt><dd>Programas de copias de seguridad que guardan copias fechadas de una carpeta sin repetir lo que no cambió.</dd>
+    <dt>SSH / rsync</dt><dd>Acceso seguro a otra computadora / copia de carpetas que solo envía lo que cambió.</dd>
+    <dt><code>gh</code> / <code>glab</code></dt><dd>Programas de línea de comandos de GitHub / GitLab.</dd>
+    <dt>Deploy / Vercel</dt><dd>Publicar el sitio en línea / un servicio que publica sitios con cada push.</dd>
+    <dt>DNS / dominio propio</dt><dd>El «catálogo de direcciones» de internet / una dirección tuya (ej.: seudominio.com) que puedes apuntar donde quieras.</dd>
+    <dt>Permisos del token</dt><dd>Lo que puede hacer el token: <code>read_repository</code> lee, <code>write_repository</code> envía, <code>api</code> hace todo (incluso borrar).</dd>
+    <dt>Push to create</dt><dd>En GitLab, enviar a una dirección que todavía no existe crea el proyecto como privado.</dd>
+    <dt><code>refs/pull/*</code></dt><dd>Referencias internas que GitHub crea para cada pull request; vienen con <code>--mirror</code> y no se pueden volver a enviar.</dd>
+    <dt><code>remote update --prune</code></dt><dd>Actualiza el espejo y elimina las ramas que desaparecieron del original (las copias antiguas aún las conservan).</dd>
+    <dt>Fork / colaborador</dt><dd>Copia vinculada al repo original / persona con acceso al repo de otra cuenta. Ambas cosas crean un vínculo entre cuentas.</dd>
+    <dt>Append-only</dt><dd>Destino de copia de seguridad que acepta cosas nuevas, pero no permite borrar ni modificar las antiguas.</dd>
+    <dt>Tailscale</dt><dd>Red privada que conecta tus dispositivos por internet como si estuvieran en la misma casa.</dd>
+    <dt>Clave SSH</dt><dd>Par de archivos que reemplaza la contraseña para acceder a otra computadora.</dd>
+    <dt>Credential helper</dt><dd>Recurso de git que guarda y entrega la contraseña o el token sin dejarlos en la línea de comandos.</dd>
+    <dt>Rebase</dt><dd>Reescribir el historial de una rama para reorganizar commits; después, el envío necesita <code>push --force</code>.</dd>
+    <dt>3-2-1</dt><dd>3 copias, 2 lugares, 1 fuera de casa.</dd>
+  </dl>
+</div></section>
+
+<section id="roadmap"><div class="wrap">
+  <span class="chip">Próximos pasos</span>
+  <h2>Cómo ponerlo en práctica sin perderte</h2>
+  <p class="sub">El orden que da resultados más rápido.</p>
+  <div class="phase"><div class="tag">Hoy</div><div class="d"><strong>Prevención</strong><span>2FA en todo, limpieza de tokens y claves, protección de ramas en los repos importantes.</span></div></div>
+  <div class="phase"><div class="tag">Semana 1</div><div class="d"><strong>Espejo + copias en el disco</strong><span>Espejo local de todos los repos, copia diaria y primera prueba de restauración con 3 repos.</span></div></div>
+  <div class="phase"><div class="tag">Semana 2</div><div class="d"><strong>Copia en GitLab</strong><span>Cuenta sin vínculos, token que solo permite enviar (<code>read_repository</code> + <code>write_repository</code>) y envío diario; GitLab crea cada proyecto privado con el primer envío.</span></div></div>
+  <div class="phase"><div class="tag">Después</div><div class="d"><strong>Fuera de casa y dominio propio</strong><span>La VPS descarga las copias cada semana (o puedes instalar Forgejo) y las páginas nuevas se publican en tu propio dominio.</span></div></div>
+  <p class="mut" style="margin-top:22px;font-size:.9rem">Fuentes: <a href="https://docs.gitlab.com/user/gitlab_com/" target="_blank" rel="noopener">GitLab.com settings</a> · <a href="https://docs.gitlab.com/user/storage_usage_quotas/" target="_blank" rel="noopener">GitLab Storage</a> · <a href="https://docs.codeberg.org/getting-started/faq/" target="_blank" rel="noopener">Codeberg FAQ</a> · <a href="https://codeberg.org/Codeberg/org/src/branch/main/TermsOfUse.md" target="_blank" rel="noopener">Términos de uso de Codeberg</a> · <a href="https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github" target="_blank" rel="noopener">GitHub: archivos grandes</a> · <a href="https://blog.codeberg.org/protecting-our-floss-commons-from-llms.html" target="_blank" rel="noopener">Codeberg y el contenido de IA</a> · <a href="https://forgejo.org" target="_blank" rel="noopener">Forgejo</a></p>
+</div></section>
+
+<footer>
+  <div class="wrap">
+    <div class="pill">git</div><div class="pill">GitLab</div><div class="pill">Forgejo</div><div class="pill">3-2-1</div>
+    <p style="margin-top:18px">Protege tus repos · guía abierta y gratis ·
+      <a href="https://github.com/inematds/protegendo-seus-repos">inematds/protegendo-seus-repos</a> ·
+      <a href="https://inema.club">INEMA.CLUB</a></p>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var KEY='protegendo-seus-repos-theme';
+    var b=document.body, t=document.getElementById('themeToggle');
+    if(localStorage.getItem(KEY)==='light'){ b.classList.add('light'); t.textContent='☀️'; }
+    t.addEventListener('click',function(){
+      var light=b.classList.toggle('light');
+      t.textContent=light?'☀️':'🌙';
+      localStorage.setItem(KEY, light?'light':'dark');
+    });
+  })();
+</script>
+</body>
+</html>
